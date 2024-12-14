@@ -21,7 +21,9 @@ jobs:
         with:
           java-version: "11"
           distribution: "temurin"
-    
+      - name: Add RDS info
+        run: |
+          echo "${{ secrets.RDS_INFO }}" | base64 --decode >> src/main/resources/config/application-dev.yml    
       - name: Build with Gradle
         run: |
           chmod +x ./gradlew
@@ -48,7 +50,9 @@ jobs:
 
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:applicant
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:applicant
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
       - name: Fill in the new image ID in the Amazon ECS task definition
@@ -60,9 +64,24 @@ jobs:
           image: ${{ steps.build-image.outputs.image }}
 
       - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: app
           cluster: ecs-cluster
           wait-for-service-stability: true
+
+
+      - name: Post a message in a channel
+        uses: slackapi/slack-github-action@v2.0.0
+        if: always()
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "<@channel> Front Build 결과: ${{ job.status }}\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        
