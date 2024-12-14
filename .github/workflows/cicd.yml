@@ -60,15 +60,15 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:        
           task-definition: task-definition.json
-          container-name: app
+          container-name: jinwoo-back-applicant
           image: ${{ steps.build-image.outputs.image }}
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: app
-          cluster: ecs-cluster
+          service: ec2team-241214-back-app-service
+          cluster: ec2team-241214-ecs-cluster
           wait-for-service-stability: true
 
 
