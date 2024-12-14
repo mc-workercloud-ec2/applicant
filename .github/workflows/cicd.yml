@@ -83,5 +83,5 @@ jobs:
               - type: "section"
                 text:
                   type: "mrkdwn"
-                  text: "<@channel> Front Build 결과: ${{ job.status }}\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  text: "<@channel> applicant Build 결과: ${{ job.status }}\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         
